@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 import mysql.connector
+from utils.utils import convert_tuple_list_to_dict
 
 import os
 from dotenv import load_dotenv
@@ -16,9 +17,6 @@ class User(BaseModel):
     telefone: str | None = None
 
 app = FastAPI()
-
-
-
 
 @app.post("/api/create_user/")
 async def create_user(user: User):
@@ -73,6 +71,7 @@ async def create_user(user: User):
         cursor = db.cursor()
         cursor.execute(f"INSERT INTO users (nome, email, telefone) VALUES ('{user.nome}', '{user.email}', '{user.telefone}')")
         db.commit()
+        db.close()
 
         return {
             "status": {
@@ -93,9 +92,40 @@ async def create_user(user: User):
             }
         }
 
+@app.get("/api/find_all_users")
+def find_all_users():
+    db = mysql.connector.connect(
+            user='root',
+            password=os.getenv("PASSWORD_MYSQL"),
+            host='127.0.0.1',
+            database="crudfastapi"
+        )
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users;")
+    rows_of_tuples = cursor.fetchall()
+    rows = convert_tuple_list_to_dict(rows_of_tuples)
+    
+    return {
+            "status": {
+                "error": False,
+                "code": 200,
+                "type": "success",
+                "message": "success"
+            },
+            "data": rows
+        }
+    
 
-def read_user():
-    pass
+@app.get("/api/read_user/{user_id}")
+def read_user(user_id):
+    db = mysql.connector.connect(
+            user='root',
+            password=os.getenv("PASSWORD_MYSQL"),
+            host='127.0.0.1',
+            database="crudfastapi"
+        )
+    cursor = db.cursor()
+    cursor.execute("")
 
 def update_user():
     pass
