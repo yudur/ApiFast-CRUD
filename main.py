@@ -80,7 +80,9 @@ async def create_user(user: User):
                 "type": "success",
                 "message": "user created successfully"
             },
-            "data": user
+            "data": [
+                user
+            ]
         }
     except Exception as error:
         return {
@@ -104,6 +106,7 @@ def find_all_users():
     cursor.execute("SELECT * FROM users;")
     rows_of_tuples = cursor.fetchall()
     rows = convert_tuple_list_to_dict(rows_of_tuples)
+    db.close()
     
     return {
             "status": {
@@ -125,7 +128,19 @@ def read_user(user_id):
             database="crudfastapi"
         )
     cursor = db.cursor()
-    cursor.execute("")
+    cursor.execute(f"SELECT * FROM users WHERE id = {user_id};")
+    row_of_tuple = cursor.fetchall()
+    row = convert_tuple_list_to_dict(row_of_tuple)
+
+    return {
+        "status": {
+            "error": False,
+            "code": 200,
+            "type": "success",
+            "message": "success"
+        },
+        "data": row
+    }
 
 def update_user():
     pass
