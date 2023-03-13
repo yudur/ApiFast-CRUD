@@ -131,6 +131,7 @@ def read_user(user_id):
     cursor.execute(f"SELECT * FROM users WHERE id = {user_id};")
     row_of_tuple = cursor.fetchall()
     row = convert_tuple_list_to_dict(row_of_tuple)
+    db.close()
 
     return {
         "status": {
@@ -142,8 +143,72 @@ def read_user(user_id):
         "data": row
     }
 
-def update_user():
-    pass
+@app.post("/api/update_user/{id_user}")
+def update_user(id_user, user: User):
+    if len(user.nome) <= 0:
+        return {
+            "status": {
+                "error": True,
+                "code": 400,
+                "type": "Bad Request",
+                "message": 'the variable "nome" is invalid'
+            }
+        }
+    elif len(user.nome.split()) <= 1:
+        return {
+            "status": {
+                "error": True,
+                "code": 400,
+                "type": "Bad Request",
+                "message": 'the variable "nome" must contain your last name'
+            }
+        }
+
+    regex_email = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+    if not user.email is None and not re.fullmatch(regex_email, user.email):
+        return {
+            "status": {
+                "error": True,
+                "code": 400,
+                "type": "Bad Request",
+                "message": 'invalid email'
+            }
+        }
+    
+    regex_telefone = re.compile(r'[0-9]{11}')
+    if not user.telefone is None and not re.fullmatch(regex_telefone, user.telefone):
+        return {
+            "status": {
+                "error": True,
+                "code": 400,
+                "type": "Bad Request",
+                "message": 'invalid telefone'
+            }
+        }
+
+    db = mysql.connector.connect(
+            user='root',
+            password=os.getenv("PASSWORD_MYSQL"),
+            host='127.0.0.1',
+            database="crudfastapi"
+        )
+    cursor = db.cursor()
+    cursor.execute(f'UPDATE users SET nome = "{user.nome}", email = "{user.email}", telefone = "{user.telefone}" WHERE id = {id_user};')
+    db.commit()
+    cursor.execute(f"SELECT * FROM users WHERE id = {id_user};")
+    row_of_tupla = cursor.fetchall()
+    row = convert_tuple_list_to_dict(row_of_tupla)
+    db.close()
+
+    return {
+            "status": {
+                "error": False,
+                "code": 200,
+                "type": "success",
+                "message": "user updated successfully"
+            },
+            "data": row
+        }
 
 def delete_user():
     pass
