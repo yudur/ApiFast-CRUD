@@ -210,5 +210,24 @@ def update_user(id_user, user: User):
             "data": row
         }
 
-def delete_user():
-    pass
+@app.delete("/api/delete_user/{id_user}")
+def delete_user(id_user):
+    db = mysql.connector.connect(
+            user='root',
+            password=os.getenv("PASSWORD_MYSQL"),
+            host='127.0.0.1',
+            database="crudfastapi"
+        )
+    cursor = db.cursor()
+    cursor.execute(f"DELETE FROM users WHERE id = {id_user};")
+    db.commit()
+    db.close()
+
+    return {
+            "status": {
+                "error": False,
+                "code": 200,
+                "type": "success",
+                "message": "User deleted successfully"
+            }
+        }
